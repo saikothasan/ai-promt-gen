@@ -28,7 +28,7 @@ export const generatePrompt = async (input: string): Promise<GeneratePromptRespo
         'Authorization': `Bearer ${apiKey}`,
       },
       body: JSON.stringify({
-        model: 'gpt-4',
+        model: 'gpt-4o-mini',
         messages: [
           { role: 'system', content: 'You are a helpful assistant.' },
           { role: 'user', content: input },
