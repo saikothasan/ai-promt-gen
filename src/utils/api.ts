@@ -30,7 +30,7 @@ export const generatePrompt = async (input: string): Promise<GeneratePromptRespo
       body: JSON.stringify({
         model: 'gpt-4o-mini',
         messages: [
-          { role: 'system', content: 'You are a helpful assistant.' },
+          { role: 'system', content: 'Write a advanced prompt:' },
           { role: 'user', content: input },
         ],
         temperature: 0.7,
