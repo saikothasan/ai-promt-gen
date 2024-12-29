@@ -11,7 +11,7 @@ interface PromptInputProps {
 export const PromptInput = ({ onToast }: PromptInputProps) => {
   const [input, setInput] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [category, setCategory] = useState('general');
+  const [category, setCategory] = useState(categories?.[0]?.value || 'general');
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const addPrompt = usePromptStore((state) => state.addPrompt);
 
@@ -23,36 +23,50 @@ export const PromptInput = ({ onToast }: PromptInputProps) => {
         textarea.style.height = `${textarea.scrollHeight}px`;
       }
     };
-
     adjustHeight();
   }, [input]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!input.trim()) return;
 
+    if (!input.trim()) return;
     setIsLoading(true);
+
     try {
       const response = await generatePrompt(input);
-      const result = response.candidates[0].content.parts[0].text;
-      
+
+      const result = response.choices?.[0]?.message?.content ?? 'No response generated.';
+
       addPrompt({
         content: input,
         category,
         response: result,
       });
-      
+
       setInput('');
       onToast('Prompt generated successfully!', 'success');
     } catch (error) {
-      onToast(error instanceof Error ? error.message : 'Failed to generate prompt', 'error');
+      onToast(
+        error instanceof Error ? error.message : 'Failed to generate prompt',
+        'error'
+      );
     } finally {
       setIsLoading(false);
     }
   };
 
+  const handleKeyDown = (e: React.KeyboardEvent) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      if (input.trim()) handleSubmit(e as unknown as React.FormEvent);
+    }
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="w-full max-w-3xl mx-auto space-y-4">
+    <form
+      onSubmit={handleSubmit}
+      className="w-full max-w-3xl mx-auto space-y-4"
+    >
       <div className="flex gap-2 mb-4">
         <select
           value={category}
@@ -65,11 +79,11 @@ export const PromptInput = ({ onToast }: PromptInputProps) => {
             </option>
           ))}
         </select>
-        
+
         <button
           type="button"
           onClick={() => {
-            setInput(input + ' [Be creative and detailed]');
+            setInput((prev) => `${prev} [Be creative and detailed]`);
             textareaRef.current?.focus();
           }}
           className="px-3 py-2 rounded-lg bg-white/5 border border-purple-500/20 hover:bg-white/10 transition-all duration-300 flex items-center gap-2"
@@ -84,11 +98,12 @@ export const PromptInput = ({ onToast }: PromptInputProps) => {
           ref={textareaRef}
           value={input}
           onChange={(e) => setInput(e.target.value)}
+          onKeyDown={handleKeyDown}
           placeholder="Enter your prompt idea..."
           className="w-full min-h-[100px] p-4 rounded-lg bg-white/5 backdrop-blur-sm border border-purple-500/20 focus:border-purple-500 focus:ring-2 focus:ring-purple-500/20 outline-none transition-all duration-300 resize-none"
           disabled={isLoading}
         />
-        
+
         <button
           type="submit"
           disabled={isLoading || !input.trim()}
